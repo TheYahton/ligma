@@ -1,0 +1,13 @@
+// This is comment
+
+/* This
+Is
+Multiline
+Comment */
+
+proc main(): i32 {
+    let x: i32 = 5;
+	print("Hello, world!\n");
+	return 0;
+}
+
