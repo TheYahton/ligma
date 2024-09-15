@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from parser import (
     Node,
-    NodeKind,
+    BinaryKind,
     NumberNode,
     BinaryNode,
     AssignNode,
@@ -16,37 +16,32 @@ class Scope:
     variables: dict[str, int | None]
 
 
-def interpret(ast: Node | str | int, scope: Scope):
-    if not isinstance(ast, Node):
-        raise TypeError
-
+def interpret(ast: Node, scope: Scope):
     match ast:
         case NumberNode() as x:
-            return x.children[0]
+            return x.value
         case BinaryNode() as x:
-            lhs = interpret(x.children[0], scope)
-            rhs = interpret(x.children[1], scope)
-            match x.type:
-                case NodeKind.Add:
+            lhs = interpret(x.lhs, scope)
+            rhs = interpret(x.rhs, scope)
+            match x.kind:
+                case BinaryKind.Add:
                     return lhs + rhs
-                case NodeKind.Sub:
+                case BinaryKind.Sub:
                     return lhs - rhs
+                case BinaryKind.Mul:
+                    return lhs * rhs
+                case BinaryKind.Div:
+                    return lhs / rhs
         case AssignNode() as x:
-            name = interpret(x.children[0], scope)
-            value = interpret(x.children[1], scope)
-            if name in scope.variables:
-                scope.variables.update({name: value})
+            name = x.var.name
+            value = interpret(x.value, scope)
+            scope.variables.update({name: value})
             return value
-        case VariableNode(type=NodeKind.InitVar) as x:
-            scope.variables.update({x.children[0]: None})
-            return x.children[0]
-        case VariableNode(type=NodeKind.GetVar) as x:
-            if x.children[0] not in scope.variables:
-                raise SyntaxError
-            return scope.variables[x.children[0]]
+        case VariableNode() as x:
+            return scope.variables[x.name]
         case CallNode() as x:
-            value = interpret(x.children[1], scope)
-            func = x.children[0]
+            value = interpret(x.arg, scope)
+            func = x.name
             match func:
                 case "print":
                     print(value)
