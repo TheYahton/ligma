@@ -5,9 +5,15 @@ Is
 Multiline
 Comment */
 
+/*
 proc main(): i32 {
     let x: i32 = 5;
 	print("Hello, world!\n");
 	return 0;
 }
+*/
 
+let x = 5;
+let b = x+5;
+let c = x+1+b;
+print(c);
