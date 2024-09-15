@@ -58,3 +58,7 @@ def metainterpret(ast: list[Node]):
     scope = Scope({})
     for a in ast:
         interpret(a, scope)
+
+
+# TODO: rethink about scopes
+# TODO: rethink about functions
