@@ -47,6 +47,19 @@ class CallNode(Node):
     arg: Node
 
 
+def arith2binary(kind: TokenKind) -> BinaryKind:
+    match kind:
+        case TokenKind.Plus:
+            return BinaryKind.Add
+        case TokenKind.Minus:
+            return BinaryKind.Sub
+        case TokenKind.Asterisk:
+            return BinaryKind.Mul
+        case TokenKind.Slash:
+            return BinaryKind.Div
+    raise Exception
+
+
 class Parser:
     def __init__(self, tokens: list[Token]):
         self._tokens = tokens
@@ -57,25 +70,15 @@ class Parser:
         while len(self._stack) > 0 and (self._stack[-1].prec() >= op1.prec()):
             op2 = self._stack.pop()
             match op2.kind:
-                case TokenKind.Plus:
+                case (
+                    TokenKind.Plus
+                    | TokenKind.Minus
+                    | TokenKind.Asterisk
+                    | TokenKind.Slash as x
+                ):
                     rhs = self._output.pop()
                     lhs = self._output.pop()
-                    op = BinaryNode(lhs=lhs, rhs=rhs, kind=BinaryKind.Add)
-                    self._output.append(op)
-                case TokenKind.Minus:
-                    rhs = self._output.pop()
-                    lhs = self._output.pop()
-                    op = BinaryNode(lhs=lhs, rhs=rhs, kind=BinaryKind.Sub)
-                    self._output.append(op)
-                case TokenKind.Asterisk:
-                    rhs = self._output.pop()
-                    lhs = self._output.pop()
-                    op = BinaryNode(lhs=lhs, rhs=rhs, kind=BinaryKind.Mul)
-                    self._output.append(op)
-                case TokenKind.Slash:
-                    rhs = self._output.pop()
-                    lhs = self._output.pop()
-                    op = BinaryNode(lhs=lhs, rhs=rhs, kind=BinaryKind.Div)
+                    op = BinaryNode(lhs=lhs, rhs=rhs, kind=arith2binary(x))
                     self._output.append(op)
                 case TokenKind.Id:
                     arg = self._output.pop()
