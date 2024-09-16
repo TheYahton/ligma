@@ -3,7 +3,7 @@ from enum import Enum, auto
 from dataclasses import dataclass
 from typing import Literal
 
-from lexer import Token, TokenKind
+from lexer import Token, TokenKind, SPECIAL
 
 
 class BinaryKind(Enum):
@@ -53,10 +53,10 @@ class Parser:
         self._stack: list[Token] = []
         self._output: list[Node] = []
 
-    def _pop_stack(self):
-        while len(self._stack) > 0:
-            smth = self._stack.pop()
-            match smth.kind:
+    def _pop_stack(self, op1: Token):
+        while len(self._stack) > 0 and (self._stack[-1].prec() >= op1.prec()):
+            op2 = self._stack.pop()
+            match op2.kind:
                 case TokenKind.Plus:
                     rhs = self._output.pop()
                     lhs = self._output.pop()
@@ -81,6 +81,15 @@ class Parser:
                     arg = self._output.pop()
                     print = CallNode(name="print", arg=arg)
                     self._output.append(print)
+                case TokenKind.Equal:
+                    value = self._output.pop()
+                    var = self._output.pop()
+                    match var:
+                        case VariableNode():
+                            assign = AssignNode(var=var, value=value)
+                            self._output.append(assign)
+                        case _:
+                            raise SyntaxError
 
     def _number(self, token):
         number = token.content
@@ -94,24 +103,7 @@ class Parser:
         node = VariableNode(name=token.content)
         self._output.append(node)
 
-    def _let(self, token):
-        let = token
-        name = self._tokens.pop(0)
-        equal = self._tokens.pop(0)
-        semicolon_index = self._tokens.index(Token(TokenKind.Semicolon, ";"))
-        raw_statement = self._tokens[:semicolon_index]
-        self._tokens = self._tokens[semicolon_index:]
-        semicolon = self._tokens.pop(0)
-
-        parser = Parser(raw_statement)
-        statement = parser.parse().pop()
-        node = AssignNode(
-            var=VariableNode(name=name.content),
-            value=statement,
-        )
-        self._output.append(node)
-
-    def parse(self) -> list[Node]:
+    def parse_statement(self) -> Node:
         while len(self._tokens) > 0:
             token = self._tokens.pop(0)
             match token.kind:
@@ -124,12 +116,22 @@ class Parser:
                     | TokenKind.Minus
                     | TokenKind.Asterisk
                     | TokenKind.Slash
+                    | TokenKind.Equal
                 ):
-                    self._pop_stack()
+                    self._pop_stack(token)
                     self._stack.append(token)
-                case TokenKind.Let:
-                    self._let(token)
+                case TokenKind.Semicolon:
+                    break
 
-        self._pop_stack()
+        self._pop_stack(SPECIAL)
 
-        return self._output
+        return self._output.pop()
+
+    def parse_all(self) -> list[Node]:
+        output: list[Node] = []
+        while len(self._tokens) > 0 and self._tokens[0].kind != TokenKind.End:
+            output.append(self.parse_statement())
+            self._stack.clear()
+            self._output.clear()
+
+        return output

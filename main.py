@@ -67,7 +67,7 @@ def main():
     tokens = Lexer(text).all()
     print_tokens(debug, tokens)
 
-    ast = Parser(tokens).parse()
+    ast = Parser(tokens).parse_all()
     print_ast(debug, ast)
 
     print_interpret(debug)

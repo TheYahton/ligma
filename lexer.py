@@ -32,13 +32,13 @@ class TokenKind(Enum):
 
     # Keywords
     Proc = auto()
-    Let = auto()
     Return = auto()
+
+    Special = auto()
 
 
 KEYWORDS = {
     "proc": TokenKind.Proc,
-    "let": TokenKind.Let,
     "return": TokenKind.Return,
 }
 
@@ -65,6 +65,21 @@ ONES = {
 class Token:
     kind: TokenKind
     content: str = ""
+
+    def prec(self) -> int:
+        match self.kind:
+            case TokenKind.Special:
+                return -1000
+            case TokenKind.Equal:
+                return 0
+            case TokenKind.Plus | TokenKind.Minus:
+                return 1
+            case TokenKind.Asterisk | TokenKind.Slash:
+                return 2
+        return 1000
+
+
+SPECIAL = Token(kind=TokenKind.Special)
 
 
 class Lexer:
