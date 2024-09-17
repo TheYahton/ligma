@@ -96,7 +96,7 @@ class Parser:
 
     def _number(self, token):
         number = token.content
-        node = NumberNode(value=int(number))
+        node = NumberNode(value=number)
         self._output.append(node)
 
     def _id(self, token):

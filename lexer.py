@@ -117,7 +117,7 @@ class Lexer:
             case "":
                 token = Token(TokenKind.End)
             case x if x[0].isdecimal():
-                content = self.while_func(str.isdecimal)
+                content = int(self.while_func(str.isdecimal))
                 token = Token(TokenKind.NumberLiteral, content)
             case x if x.startswith('"'):
                 content = self.until('"', 1)
