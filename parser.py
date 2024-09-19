@@ -42,9 +42,15 @@ class AssignNode(Node):
 
 
 @dataclass(kw_only=True)
-class CallNode(Node):
+class ProcNode(Node):
     name: str
-    arg: Node
+    scope: ScopeNode
+
+
+@dataclass(kw_only=True)
+class CallNode(Node):
+    func_name: str
+    arg: Node | None
 
 
 @dataclass(kw_only=True)
@@ -85,10 +91,6 @@ class Parser:
                     lhs = self._output.pop()
                     op = BinaryNode(lhs=lhs, rhs=rhs, kind=arith2binary(x))
                     self._output.append(op)
-                case TokenKind.Id:
-                    arg = self._output.pop()
-                    print = CallNode(name="print", arg=arg)
-                    self._output.append(print)
                 case TokenKind.Equal:
                     value = self._output.pop()
                     var = self._output.pop()
@@ -98,6 +100,8 @@ class Parser:
                             self._output.append(assign)
                         case _:
                             raise SyntaxError
+                case _:
+                    raise SyntaxError(f"unexpected op {op2}")
 
     def _number(self, token):
         number = token.content
@@ -105,14 +109,10 @@ class Parser:
         self._output.append(node)
 
     def _id(self, token):
-        if token.content == "print":
-            self._stack.append(token)
-            return
         node = VariableNode(name=token.content)
         self._output.append(node)
 
-    def _scope(self):
-        balance = 1
+    def _scope(self, balance: int = 1):
         i = 0
         while i < len(self._tokens):
             if self._tokens[i].kind == TokenKind.LBrace:
@@ -128,7 +128,14 @@ class Parser:
         self._output.append(node)
         self._tokens[0 : i + 1] = []
 
-    def parse_statement(self) -> Node:
+    def _proc(self):
+        name = self._tokens.pop(0)
+        self._tokens.pop(0)
+        self._scope()
+        node = ProcNode(name=name.content, scope=self._output.pop())
+        self._output.append(node)
+
+    def parse_statement(self) -> Node | None:
         while len(self._tokens) > 0:
             token = self._tokens.pop(0)
             match token.kind:
@@ -149,6 +156,17 @@ class Parser:
                 ):
                     self._pop_stack(token)
                     self._stack.append(token)
+                case TokenKind.Proc:
+                    self._proc()
+                case TokenKind.Call:
+                    name = self._tokens.pop(0)
+                    semi = self._tokens.index(Token(TokenKind.Semicolon, ";"))
+                    parser = Parser(self._tokens[0:semi])
+                    arg = parser.parse_statement()
+                    node = CallNode(func_name=name.content, arg=arg)
+                    self._output.append(node)
+                    self._tokens[0:semi] = []
+
                 case TokenKind.Semicolon:
                     break
                 case TokenKind.LParen | TokenKind.RParen:
@@ -161,12 +179,16 @@ class Parser:
 
         self._pop_stack(SPECIAL)
 
-        return self._output.pop()
+        if len(self._output) > 0:
+            return self._output.pop()
+        return None
 
     def parse_all(self) -> list[Node]:
         output: list[Node] = []
         while len(self._tokens) > 0 and self._tokens[0].kind != TokenKind.End:
             statement = self.parse_statement()
+            if statement is None:
+                break
             output.append(statement)
             self._stack.clear()
             self._output.clear()

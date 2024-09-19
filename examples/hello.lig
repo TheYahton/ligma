@@ -13,12 +13,12 @@ proc main(): i32 {
 }
 */
 
-x = {
-	a = 1;
-	b = 2;
-	c = a + b;
-	c
+proc keke {
+	a = 5;
+	b = 6;
+	c = a+b;
+	call print(c);
 };
-print(x);
-print(a);
-print(b);
+
+call keke;
+call print(5);

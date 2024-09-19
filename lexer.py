@@ -33,6 +33,7 @@ class TokenKind(Enum):
     # Keywords
     Proc = auto()
     Return = auto()
+    Call = auto()
 
     Special = auto()
 
@@ -40,6 +41,7 @@ class TokenKind(Enum):
 KEYWORDS = {
     "proc": TokenKind.Proc,
     "return": TokenKind.Return,
+    "call": TokenKind.Call,
 }
 
 ONES = {

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from parser import (
     Node,
@@ -10,19 +10,29 @@ from parser import (
     VariableNode,
     CallNode,
     ScopeNode,
+    ProcNode,
 )
 
 
 @dataclass
 class Scope:
-    variables: dict[str, int | None]
+    variables: dict[str, int | None] = field(default_factory=lambda: {})
+    procedures: dict[str, ProcNode] = field(default_factory=lambda: {})
     parent: Scope | None = None
 
-    def get_var(self, name: str):
+    def get_var(self, name: str) -> int | None:
         if name in self.variables:
             return self.variables[name]
         if self.parent is not None:
             return self.parent.get_var(name)
+        else:
+            return None
+
+    def get_proc(self, name: str) -> ProcNode | None:
+        if name in self.procedures:
+            return self.procedures[name]
+        if self.parent is not None:
+            return self.parent.get_proc(name)
         else:
             return None
 
@@ -50,25 +60,32 @@ def interpret(ast: Node, scope: Scope):
             return value
         case VariableNode() as x:
             return scope.get_var(x.name)
+        case ProcNode() as x:
+            proc_name = x.name
+            scope.procedures.update({proc_name: x})
         case CallNode() as x:
-            value = interpret(x.arg, scope)
-            func = x.name
-            match func:
-                case "print":
-                    print(value)
+            func = x.func_name
+            value = None
+            if x.arg is not None:
+                value = interpret(x.arg, scope)
+
+            if (proc := scope.get_proc(func)) is not None:
+                interpret(proc.scope, scope)
+            if func == "print":
+                print(value)
+
         case ScopeNode() as x:
-            local_scope = Scope({}, scope)
+            local_scope = Scope(parent=scope)
             for node in x.nodes:
                 result = interpret(node, local_scope)
             return result
+        case _:
+            raise SyntaxError(f"unexpected node {ast}")
 
-    return 0
+    return None
 
 
 def metainterpret(ast: list[Node]):
-    global_scope = Scope({})
+    global_scope = Scope()
     for a in ast:
         interpret(a, global_scope)
-
-
-# TODO: rethink about functions
