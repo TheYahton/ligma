@@ -59,7 +59,8 @@ def interpret(ast: Node, scope: Scope):
         case ScopeNode() as x:
             local_scope = Scope({}, scope)
             for node in x.nodes:
-                interpret(node, local_scope)
+                result = interpret(node, local_scope)
+            return result
 
     return 0
 

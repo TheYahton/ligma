@@ -13,10 +13,12 @@ proc main(): i32 {
 }
 */
 
-x = 2;
-{
-x = x + 1;
-print(x);
+x = {
+	a = 1;
+	b = 2;
+	c = a + b;
+	c
 };
 print(x);
-
+print(a);
+print(b);
