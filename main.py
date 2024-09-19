@@ -6,9 +6,13 @@ from parser import Parser
 from interpreter import metainterpret
 
 
-# TODO: codegen
-# TODO: improve functions and calls in parser and interpreter
-# TODO: if compiler exist, add flags to compile or execute
+# TODO: кодогенерация
+# TODO: переосмыслить вызов функции print
+# TODO: если написано что-то кроме интерпретатора, то добавить флаги для этого
+# TODO: добавить систему типов
+# TODO: добавить обработку скобок в парсере
+# TODO: переписать лексер - использовать конечные автоматы (FSM)
+# TODO: переписать парсер - использовать конечные автоматы (FSM)
 
 WIDTH, _ = get_terminal_size()
 
