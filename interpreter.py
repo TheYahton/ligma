@@ -1,3 +1,4 @@
+from __future__ import annotations
 from dataclasses import dataclass
 
 from parser import (
@@ -8,12 +9,22 @@ from parser import (
     AssignNode,
     VariableNode,
     CallNode,
+    ScopeNode,
 )
 
 
 @dataclass
 class Scope:
     variables: dict[str, int | None]
+    parent: Scope | None = None
+
+    def get_var(self, name: str):
+        if name in self.variables:
+            return self.variables[name]
+        if self.parent is not None:
+            return self.parent.get_var(name)
+        else:
+            return None
 
 
 def interpret(ast: Node, scope: Scope):
@@ -38,22 +49,25 @@ def interpret(ast: Node, scope: Scope):
             scope.variables.update({name: value})
             return value
         case VariableNode() as x:
-            return scope.variables[x.name]
+            return scope.get_var(x.name)
         case CallNode() as x:
             value = interpret(x.arg, scope)
             func = x.name
             match func:
                 case "print":
                     print(value)
+        case ScopeNode() as x:
+            local_scope = Scope({}, scope)
+            for node in x.nodes:
+                interpret(node, local_scope)
 
     return 0
 
 
 def metainterpret(ast: list[Node]):
-    scope = Scope({})
+    global_scope = Scope({})
     for a in ast:
-        interpret(a, scope)
+        interpret(a, global_scope)
 
 
-# TODO: rethink about scopes
 # TODO: rethink about functions

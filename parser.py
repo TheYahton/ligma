@@ -47,6 +47,11 @@ class CallNode(Node):
     arg: Node
 
 
+@dataclass(kw_only=True)
+class ScopeNode(Node):
+    nodes: list[Node]
+
+
 def arith2binary(kind: TokenKind) -> BinaryKind:
     match kind:
         case TokenKind.Plus:
@@ -106,10 +111,31 @@ class Parser:
         node = VariableNode(name=token.content)
         self._output.append(node)
 
+    def _scope(self):
+        balance = 1
+        i = 0
+        while i < len(self._tokens):
+            if self._tokens[i].kind == TokenKind.LBrace:
+                balance += 1
+            elif self._tokens[i].kind == TokenKind.RBrace:
+                balance -= 1
+
+            if balance == 0:
+                break
+            i += 1
+        parser = Parser(self._tokens[0:i])
+        node = ScopeNode(nodes=parser.parse_all())
+        self._output.append(node)
+        self._tokens[0 : i + 1] = []
+
     def parse_statement(self) -> Node:
         while len(self._tokens) > 0:
             token = self._tokens.pop(0)
             match token.kind:
+                case TokenKind.Comment:
+                    pass
+                case TokenKind.LBrace:
+                    self._scope()
                 case TokenKind.NumberLiteral:
                     self._number(token)
                 case TokenKind.Id:
@@ -125,6 +151,13 @@ class Parser:
                     self._stack.append(token)
                 case TokenKind.Semicolon:
                     break
+                case TokenKind.LParen | TokenKind.RParen:
+                    # TODO
+                    pass
+                case TokenKind.End:
+                    break
+                case _:
+                    raise SyntaxError(f"unexpected token: {token}")
 
         self._pop_stack(SPECIAL)
 
@@ -133,7 +166,8 @@ class Parser:
     def parse_all(self) -> list[Node]:
         output: list[Node] = []
         while len(self._tokens) > 0 and self._tokens[0].kind != TokenKind.End:
-            output.append(self.parse_statement())
+            statement = self.parse_statement()
+            output.append(statement)
             self._stack.clear()
             self._output.clear()
 
