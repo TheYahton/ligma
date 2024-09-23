@@ -76,7 +76,7 @@ class Parser:
         name = self._tokens.pop(0)
         self._tokens.pop(0)
         self._scope()
-        node = ProcNode(name=name.content, scope=self._output.pop())
+        node = ProcNode(name=name.content, body=self._output.pop())
         self._output.append(node)
 
     def parse_statement(self) -> Node | None:

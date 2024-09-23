@@ -6,59 +6,59 @@ SPECIAL = Token(kind=TokenKind.Special)
 
 class Lexer:
     def __init__(self, text: str):
-        self.text: str = text
+        self._text: str = text
 
-    def trim(self, i: int):
-        self.text = self.text[i:]
+    def _trim(self, i: int):
+        self._text = self._text[i:]
 
-    def until(self, what: str, start: int = 0) -> str:
-        i = self.text.find(what, start) + len(what)
-        content = self.text[:i]
-        self.trim(i)
+    def _until(self, what: str, start: int = 0) -> str:
+        i = self._text.find(what, start) + len(what)
+        content = self._text[:i]
+        self._trim(i)
         return content
 
-    def while_func(self, f) -> str:
+    def _while_func(self, f) -> str:
         i = 0
-        while i < len(self.text):
-            if not f(self.text[: i + 1]):
+        while i < len(self._text):
+            if not f(self._text[: i + 1]):
                 break
             i += 1
-        content = self.text[:i]
-        self.trim(i)
+        content = self._text[:i]
+        self._trim(i)
         return content
 
-    def invalid(self):
-        content = self.text[0]
-        self.trim(1)
+    def _invalid(self):
+        content = self._text[0]
+        self._trim(1)
         return content
 
     def get_token(self):
-        self.text = self.text.lstrip()
+        self._text = self._text.lstrip()
 
-        match self.text:
+        match self._text:
             case "":
                 token = Token(TokenKind.End)
             case x if x[0].isdecimal():
-                content = int(self.while_func(str.isdecimal))
+                content = int(self._while_func(str.isdecimal))
                 token = Token(TokenKind.NumberLiteral, content)
             case x if x.startswith('"'):
-                content = self.until('"', 1)
+                content = self._until('"', 1)
                 token = Token(TokenKind.StringLiteral, content)
             case x if x.startswith("//"):
-                content = self.until("\n")
+                content = self._until("\n")
                 token = Token(TokenKind.Comment, content)
             case x if x.startswith("/*"):
-                content = self.until("*/")
+                content = self._until("*/")
                 token = Token(TokenKind.Comment, content)
             case x if x[0] in ONES:
                 content = x[0]
-                self.trim(1)
+                self._trim(1)
                 token = Token(ONES[content], content)
             case x if x[0].isidentifier():
-                content = self.while_func(str.isidentifier)
+                content = self._while_func(str.isidentifier)
                 token = Token(KEYWORDS.get(content, TokenKind.Id), content)
             case _:
-                content = self.invalid()
+                content = self._invalid()
                 token = Token(TokenKind.Invalid, content)
 
         return token

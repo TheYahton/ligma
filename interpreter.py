@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 
-from parser import (
+from node import (
     Node,
     BinaryKind,
     NumberNode,
@@ -70,7 +70,7 @@ def interpret(ast: Node, scope: Scope):
                 value = interpret(x.arg, scope)
 
             if (proc := scope.get_proc(func)) is not None:
-                interpret(proc.scope, scope)
+                interpret(proc.body, scope)
             if func == "print":
                 print(value)
 

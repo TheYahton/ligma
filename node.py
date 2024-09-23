@@ -51,4 +51,4 @@ class BlockNode(Node):
 @dataclass(kw_only=True)
 class ProcNode(Node):
     name: str
-    scope: BlockNode
+    body: BlockNode
