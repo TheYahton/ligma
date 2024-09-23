@@ -9,7 +9,7 @@ from parser import (
     AssignNode,
     VariableNode,
     CallNode,
-    ScopeNode,
+    BlockNode,
     ProcNode,
 )
 
@@ -74,7 +74,7 @@ def interpret(ast: Node, scope: Scope):
             if func == "print":
                 print(value)
 
-        case ScopeNode() as x:
+        case BlockNode() as x:
             local_scope = Scope(parent=scope)
             for node in x.nodes:
                 result = interpret(node, local_scope)

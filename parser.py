@@ -1,61 +1,5 @@
-from __future__ import annotations
-from enum import Enum, auto
-from dataclasses import dataclass
-from typing import Literal
-
 from lexer import Token, TokenKind, SPECIAL
-
-
-class BinaryKind(Enum):
-    Add = auto()
-    Sub = auto()
-    Mul = auto()
-    Div = auto()
-
-
-@dataclass(kw_only=True)
-class Node:
-    pass
-
-
-@dataclass(kw_only=True)
-class NumberNode(Node):
-    value: int
-
-
-@dataclass(kw_only=True)
-class VariableNode(Node):
-    name: str
-
-
-@dataclass(kw_only=True)
-class BinaryNode(Node):
-    kind: BinaryKind
-    lhs: Node
-    rhs: Node
-
-
-@dataclass(kw_only=True)
-class AssignNode(Node):
-    var: VariableNode
-    value: Node
-
-
-@dataclass(kw_only=True)
-class ProcNode(Node):
-    name: str
-    scope: ScopeNode
-
-
-@dataclass(kw_only=True)
-class CallNode(Node):
-    func_name: str
-    arg: Node | None
-
-
-@dataclass(kw_only=True)
-class ScopeNode(Node):
-    nodes: list[Node]
+from node import *
 
 
 def arith2binary(kind: TokenKind) -> BinaryKind:
@@ -124,7 +68,7 @@ class Parser:
                 break
             i += 1
         parser = Parser(self._tokens[0:i])
-        node = ScopeNode(nodes=parser.parse_all())
+        node = BlockNode(nodes=tuple(parser.parse_all()))
         self._output.append(node)
         self._tokens[0 : i + 1] = []
 
